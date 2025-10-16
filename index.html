@@ -283,7 +283,7 @@
             const statusBar = document.getElementById('statusBar');
             
             // CSVファイルを読み込む（同じフォルダにある場合）
-            fetch('CEFRJ Wordlist Ver1.6.csv')
+            fetch('cefrj-wordlist.csv')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('CSVファイルが見つかりません');
