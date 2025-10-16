@@ -5,210 +5,416 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CEFR語句抽出ツール</title>
     <style>
+        :root {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f9f9f9;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --border-color: #ddd;
+            --button-primary: #4CAF50;
+            --button-hover: #45a049;
+            --level-a1: #2196F3;
+            --level-a2: #4CAF50;
+            --level-b1: #FF9800;
+            --level-b2: #F44336;
+            --highlight-a1: rgba(33, 150, 243, 0.2);
+            --highlight-a2: rgba(76, 175, 80, 0.2);
+            --highlight-b1: rgba(255, 152, 0, 0.2);
+            --highlight-b2: rgba(244, 67, 54, 0.2);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #3a3a3a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --border-color: #444;
+            --button-primary: #4CAF50;
+            --button-hover: #45a049;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 1200px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
-            background: #f5f5f5;
         }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
         h1 {
-            color: #333;
-            margin-bottom: 10px;
             font-size: 24px;
         }
+
         .subtitle {
-            color: #666;
+            color: var(--text-secondary);
             font-size: 14px;
             margin-bottom: 20px;
         }
-        .container {
-            background: white;
-            padding: 30px;
+
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+
         .status-bar {
-            background: #e3f2fd;
+            background: var(--bg-tertiary);
             padding: 12px;
             border-radius: 4px;
             margin-bottom: 20px;
             font-size: 14px;
             text-align: center;
         }
+
         .status-bar.loading {
             background: #fff3cd;
             color: #856404;
         }
+
         .status-bar.ready {
             background: #d4edda;
             color: #155724;
-            font-weight: bold;
         }
+
         .status-bar.error {
             background: #f8d7da;
             color: #721c24;
         }
+
         .level-selector {
-            background: #f9f9f9;
+            background: var(--bg-tertiary);
             padding: 15px;
             border-radius: 4px;
             margin-bottom: 20px;
         }
+
         .level-selector label {
             margin-right: 20px;
             cursor: pointer;
             font-size: 14px;
         }
+
         .level-selector input[type="checkbox"] {
             margin-right: 5px;
         }
+
         textarea {
             width: 100%;
-            height: 200px;
+            height: 300px;
             padding: 15px;
-            border: 2px solid #ddd;
+            border: 2px solid var(--border-color);
             border-radius: 4px;
             font-size: 14px;
             font-family: inherit;
             resize: vertical;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
         }
+
         textarea:focus {
             outline: none;
-            border-color: #4CAF50;
+            border-color: var(--button-primary);
         }
+
+        .highlighted-text {
+            width: 100%;
+            min-height: 300px;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.8;
+            background: var(--bg-secondary);
+            overflow-y: auto;
+            max-height: 500px;
+        }
+
+        .word-highlight {
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+
+        .word-highlight:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .level-a1-bg { background-color: var(--highlight-a1); color: var(--level-a1); font-weight: bold; }
+        .level-a2-bg { background-color: var(--highlight-a2); color: var(--level-a2); font-weight: bold; }
+        .level-b1-bg { background-color: var(--highlight-b1); color: var(--level-b1); font-weight: bold; }
+        .level-b2-bg { background-color: var(--highlight-b2); color: var(--level-b2); font-weight: bold; }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
         button {
-            background: #4CAF50;
+            background: var(--button-primary);
             color: white;
             border: none;
-            padding: 12px 30px;
-            font-size: 16px;
+            padding: 12px 24px;
+            font-size: 14px;
             border-radius: 4px;
             cursor: pointer;
-            margin-top: 15px;
+            transition: background 0.3s;
         }
+
         button:hover:not(:disabled) {
-            background: #45a049;
+            background: var(--button-hover);
         }
+
         button:disabled {
             background: #ccc;
             cursor: not-allowed;
         }
-        .results {
-            margin-top: 30px;
+
+        .button-secondary {
+            background: #2196F3;
         }
+
+        .button-secondary:hover:not(:disabled) {
+            background: #0b7dda;
+        }
+
         .stats {
-            background: #f9f9f9;
+            background: var(--bg-tertiary);
             padding: 15px;
             border-radius: 4px;
-            margin-bottom: 20px;
+            margin: 20px 0;
             font-size: 14px;
         }
+
         .stat-item {
-            margin: 5px 0;
+            margin: 8px 0;
         }
+
         .stat-item strong {
             font-size: 18px;
         }
+
+        .level-a1 { color: var(--level-a1); font-weight: bold; }
+        .level-a2 { color: var(--level-a2); font-weight: bold; }
+        .level-b1 { color: var(--level-b1); font-weight: bold; }
+        .level-b2 { color: var(--level-b2); font-weight: bold; }
+
+        .chart-container {
+            margin: 20px 0;
+            max-height: 400px;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
         }
+
         th, td {
-            padding: 12px;
+            padding: 10px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid var(--border-color);
         }
+
         th {
-            background: #4CAF50;
+            background: var(--button-primary);
             color: white;
             font-weight: 600;
         }
+
         tr:hover {
-            background: #f5f5f5;
+            background: var(--bg-tertiary);
         }
-        .level-a1 { color: #2196F3; font-weight: bold; }
-        .level-a2 { color: #4CAF50; font-weight: bold; }
-        .level-b1 { color: #FF9800; font-weight: bold; }
-        .level-b2 { color: #F44336; font-weight: bold; }
-        .export-btn {
-            background: #2196F3;
-            margin-left: 10px;
-        }
-        .export-btn:hover:not(:disabled) {
-            background: #0b7dda;
-        }
+
         .loading {
             display: none;
-            color: #666;
+            color: var(--text-secondary);
             margin-top: 10px;
         }
-        .info {
-            background: #e3f2fd;
-            padding: 12px;
-            border-radius: 4px;
-            margin-bottom: 15px;
+
+        .results {
+            margin-top: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .legend {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
             font-size: 13px;
-            color: #1565c0;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>CEFR語句抽出ツール</h1>
-        <div class="subtitle">CEFRJ Wordlist Ver1.6 準拠（6,863語収録）</div>
-        
+        <div class="header">
+            <div>
+                <h1>CEFR語句抽出ツール</h1>
+                <div class="subtitle">CEFRJ Wordlist Ver1.6 準拠（6,863語収録）</div>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()">🌓 ダークモード切替</button>
+        </div>
+
         <div class="status-bar loading" id="statusBar">
             辞書データを読み込み中...
         </div>
-        
-        <div class="info">
-            <strong>使い方：</strong> 長文を貼り付けて「語句を抽出」をクリック。選択したレベルの単語が抽出されます。
-        </div>
-        
+
         <div class="level-selector">
             <strong>抽出するレベルを選択：</strong><br><br>
-            <label><input type="checkbox" id="level-a1"> <span class="level-a1">A1</span></label>
-            <label><input type="checkbox" id="level-a2"> <span class="level-a2">A2</span></label>
-            <label><input type="checkbox" id="level-b1"> <span class="level-b1">B1</span></label>
-            <label><input type="checkbox" id="level-b2" checked> <span class="level-b2">B2</span></label>
+            <label><input type="checkbox" id="level-a1" onchange="updatePreview()"> <span class="level-a1">A1</span></label>
+            <label><input type="checkbox" id="level-a2" onchange="updatePreview()"> <span class="level-a2">A2</span></label>
+            <label><input type="checkbox" id="level-b1" onchange="updatePreview()"> <span class="level-b1">B1</span></label>
+            <label><input type="checkbox" id="level-b2" checked onchange="updatePreview()"> <span class="level-b2">B2</span></label>
         </div>
-        
-        <textarea id="inputText" placeholder="辞書データの読み込み中..." disabled></textarea>
-        
-        <div>
-            <button onclick="analyzeText()" id="analyzeBtn" disabled>語句を抽出</button>
-            <button class="export-btn" onclick="exportToCSV()" id="exportBtn" style="display:none;">CSVでダウンロード</button>
+
+        <div class="main-content">
+            <div class="panel">
+                <h3>📝 テキスト入力</h3>
+                <textarea id="inputText" placeholder="辞書データの読み込み中..." disabled oninput="updatePreview()"></textarea>
+                
+                <div class="button-group">
+                    <button onclick="analyzeText()" id="analyzeBtn" disabled>📊 語句を抽出</button>
+                    <button class="button-secondary" onclick="clearText()">🗑️ クリア</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>🎨 ハイライト表示</h3>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--highlight-a1);"></div>
+                        <span class="level-a1">A1</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--highlight-a2);"></div>
+                        <span class="level-a2">A2</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--highlight-b1);"></div>
+                        <span class="level-b1">B1</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--highlight-b2);"></div>
+                        <span class="level-b2">B2</span>
+                    </div>
+                </div>
+                <div class="highlighted-text" id="highlightedText">
+                    テキストを入力すると、選択したレベルの単語がリアルタイムでハイライトされます。<br>
+                    単語をクリックすると辞書で意味を確認できます。
+                </div>
+                
+                <div class="loading" id="loading">処理中...</div>
+                
+                <div class="stats" id="previewStats" style="display:none;">
+                    <div class="stat-item">
+                        <strong>リアルタイムプレビュー</strong>
+                    </div>
+                    <div class="stat-item" id="previewCount">
+                        該当単語数: <strong>0</strong>語
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <div class="loading" id="loading">処理中...</div>
-        
-        <div class="results" id="results" style="display:none;">
-            <div class="stats" id="stats"></div>
-            <table id="resultTable">
-                <thead>
-                    <tr>
-                        <th>単語</th>
-                        <th>CEFRレベル</th>
-                        <th>出現回数</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-            </table>
+
+        <div class="results hidden" id="results">
+            <div class="panel">
+                <h3>📈 分析結果</h3>
+                
+                <div class="stats" id="stats"></div>
+
+                <div class="chart-container">
+                    <canvas id="levelChart"></canvas>
+                </div>
+
+                <div class="button-group">
+                    <button class="button-secondary" onclick="exportToCSV()" id="exportBtn">📥 CSVでダウンロード</button>
+                    <button class="button-secondary" onclick="copyResults()">📋 結果をコピー</button>
+                </div>
+
+                <table id="resultTable">
+                    <thead>
+                        <tr>
+                            <th>単語</th>
+                            <th>CEFRレベル</th>
+                            <th>出現回数</th>
+                            <th>辞書</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
         let cefrDatabase = {};
+        let currentChart = null;
+        let debounceTimer = null;
         
-        // 不規則動詞データベース
         const irregularVerbs = {
             'was': 'be', 'were': 'be', 'been': 'be', 'being': 'be',
             'had': 'have', 'has': 'have', 'having': 'have',
@@ -274,15 +480,30 @@
             'beat': 'beat', 'beaten': 'beat', 'beating': 'beat'
         };
 
-        // ページ読み込み時にCSVを自動読み込み
+        // テーマ切り替え
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // チャートを再描画
+            if (currentChart && window.currentResults) {
+                createChart(window.currentResults);
+            }
+        }
+
+        // 保存されたテーマを読み込み
         window.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
             loadCSVData();
         });
 
         function loadCSVData() {
             const statusBar = document.getElementById('statusBar');
             
-            // CSVファイルを読み込む（同じフォルダにある場合）
             fetch('cefrj-wordlist.csv')
                 .then(response => {
                     if (!response.ok) {
@@ -307,8 +528,6 @@
                                 });
                                 
                                 const wordCount = Object.keys(cefrDatabase).length;
-                                
-                                // レベル別統計
                                 const levelCounts = {};
                                 Object.values(cefrDatabase).forEach(level => {
                                     levelCounts[level] = (levelCounts[level] || 0) + 1;
@@ -333,11 +552,10 @@
                 .catch(error => {
                     statusBar.className = 'status-bar error';
                     statusBar.innerHTML = 
-                        `エラー：CSVファイルを読み込めませんでした。「CEFRJ Wordlist Ver1.6.csv」がHTMLファイルと同じフォルダにあることを確認してください。`;
+                        `エラー：CSVファイルを読み込めませんでした。「cefrj-wordlist.csv」がHTMLファイルと同じフォルダにあることを確認してください。`;
                 });
         }
 
-        // 単語を原形に変換
         function lemmatize(word) {
             word = word.toLowerCase();
             
@@ -383,7 +601,87 @@
             return word;
         }
 
-        // テキストを解析
+        function updatePreview() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const text = document.getElementById('inputText').value;
+                if (!text.trim()) {
+                    document.getElementById('highlightedText').innerHTML = 
+                        'テキストを入力すると、選択したレベルの単語がリアルタイムでハイライトされます。<br>単語をクリックすると辞書で意味を確認できます。';
+                    document.getElementById('previewStats').style.display = 'none';
+                    return;
+                }
+
+                const selectedLevels = getSelectedLevels();
+                if (selectedLevels.length === 0) {
+                    document.getElementById('highlightedText').innerHTML = 
+                        'レベルを少なくとも1つ選択してください。';
+                    document.getElementById('previewStats').style.display = 'none';
+                    return;
+                }
+
+                const highlightedHtml = highlightText(text, selectedLevels);
+                document.getElementById('highlightedText').innerHTML = highlightedHtml;
+                
+                // カウント表示
+                const count = (highlightedHtml.match(/class="word-highlight/g) || []).length;
+                document.getElementById('previewCount').innerHTML = 
+                    `該当単語数: <strong>${count}</strong>語`;
+                document.getElementById('previewStats').style.display = 'block';
+            }, 300);
+        }
+
+        function highlightText(text, selectedLevels) {
+            const words = text.split(/(\s+|[.,!?;:()"\[\]{}])/);
+            
+            return words.map(token => {
+                if (/^\s+$/.test(token) || /^[.,!?;:()"\[\]{}]$/.test(token)) {
+                    return token;
+                }
+                
+                const word = token.replace(/^[^a-zA-Z]+|[^a-zA-Z]+$/g, '');
+                if (word.length < 3) return token;
+                
+                // 固有名詞チェック
+                if (/^[A-Z]+$/.test(word) || 
+                    (word[0] === word[0].toUpperCase() && 
+                     word.length > 1 && 
+                     word[1] === word[1].toUpperCase())) {
+                    return token;
+                }
+                
+                const lemma = lemmatize(word);
+                const level = cefrDatabase[lemma];
+                
+                if (level && selectedLevels.includes(level)) {
+                    return `<span class="word-highlight level-${level.toLowerCase()}-bg" onclick="openDictionary('${word}')" title="${level}">${token}</span>`;
+                }
+                
+                return token;
+            }).join('');
+        }
+
+        function getSelectedLevels() {
+            const levels = [];
+            if (document.getElementById('level-a1').checked) levels.push('A1');
+            if (document.getElementById('level-a2').checked) levels.push('A2');
+            if (document.getElementById('level-b1').checked) levels.push('B1');
+            if (document.getElementById('level-b2').checked) levels.push('B2');
+            return levels;
+        }
+
+        function openDictionary(word) {
+            window.open(`https://ejje.weblio.jp/content/${encodeURIComponent(word)}`, '_blank');
+        }
+
+        function clearText() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('highlightedText').innerHTML = 
+                'テキストを入力すると、選択したレベルの単語がリアルタイムでハイライトされます。<br>単語をクリックすると辞書で意味を確認できます。';
+            document.getElementById('previewStats').style.display = 'none';
+            document.getElementById('results').classList.add('hidden');
+        }
+
         function analyzeText() {
             const inputText = document.getElementById('inputText').value.trim();
             
@@ -397,12 +695,7 @@
                 return;
             }
             
-            // 選択されたレベルを取得
-            const selectedLevels = [];
-            if (document.getElementById('level-a1').checked) selectedLevels.push('A1');
-            if (document.getElementById('level-a2').checked) selectedLevels.push('A2');
-            if (document.getElementById('level-b1').checked) selectedLevels.push('B1');
-            if (document.getElementById('level-b2').checked) selectedLevels.push('B2');
+            const selectedLevels = getSelectedLevels();
             
             if (selectedLevels.length === 0) {
                 alert('少なくとも1つのレベルを選択してください');
@@ -410,7 +703,7 @@
             }
             
             document.getElementById('loading').style.display = 'block';
-            document.getElementById('results').style.display = 'none';
+            document.getElementById('results').classList.add('hidden');
             
             setTimeout(() => {
                 processText(inputText, selectedLevels);
@@ -423,7 +716,6 @@
             const wordMap = {};
             
             words.forEach(originalWord => {
-                // 固有名詞を除外
                 if (/^[A-Z]+$/.test(originalWord) || 
                     (originalWord[0] === originalWord[0].toUpperCase() && 
                      originalWord.length > 1 && 
@@ -439,7 +731,6 @@
                 if (cefrDatabase[lemma]) {
                     const level = cefrDatabase[lemma];
                     
-                    // 選択されたレベルのみ抽出
                     if (selectedLevels.includes(level)) {
                         if (!wordMap[lemma]) {
                             wordMap[lemma] = {
@@ -459,19 +750,17 @@
                     count: data.count
                 }))
                 .sort((a, b) => {
-                    // レベルでソート
                     const levelOrder = { 'A1': 1, 'A2': 2, 'B1': 3, 'B2': 4 };
                     const levelDiff = (levelOrder[b.level] || 0) - (levelOrder[a.level] || 0);
                     if (levelDiff !== 0) return levelDiff;
-                    // 出現回数でソート
                     return b.count - a.count;
                 });
             
             displayResults(results);
+            createChart(results);
             
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('results').style.display = 'block';
-            document.getElementById('exportBtn').style.display = 'inline-block';
+            document.getElementById('results').classList.remove('hidden');
             
             window.currentResults = results;
         }
@@ -480,7 +769,6 @@
             const totalCount = results.length;
             const totalOccurrences = results.reduce((sum, r) => sum + r.count, 0);
             
-            // レベル別統計
             const levelCounts = {};
             results.forEach(r => {
                 levelCounts[r.level] = (levelCounts[r.level] || 0) + 1;
@@ -512,6 +800,106 @@
                 const levelCell = row.insertCell(1);
                 levelCell.innerHTML = `<span class="level-${item.level.toLowerCase()}">${item.level}</span>`;
                 row.insertCell(2).textContent = item.count;
+                const dictCell = row.insertCell(3);
+                dictCell.innerHTML = `<button class="button-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="openDictionary('${item.word}')">🔍 辞書</button>`;
+            });
+        }
+
+        function createChart(results) {
+            const ctx = document.getElementById('levelChart');
+            
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            const levelCounts = { 'A1': 0, 'A2': 0, 'B1': 0, 'B2': 0 };
+            results.forEach(r => {
+                levelCounts[r.level] = (levelCounts[r.level] || 0) + 1;
+            });
+            
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#e0e0e0' : '#333';
+            
+            currentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['A1', 'A2', 'B1', 'B2'],
+                    datasets: [{
+                        label: '単語数',
+                        data: [levelCounts.A1, levelCounts.A2, levelCounts.B1, levelCounts.B2],
+                        backgroundColor: [
+                            'rgba(33, 150, 243, 0.7)',
+                            'rgba(76, 175, 80, 0.7)',
+                            'rgba(255, 152, 0, 0.7)',
+                            'rgba(244, 67, 54, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(33, 150, 243, 1)',
+                            'rgba(76, 175, 80, 1)',
+                            'rgba(255, 152, 0, 1)',
+                            'rgba(244, 67, 54, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'CEFRレベル別語彙数',
+                            color: textColor,
+                            font: {
+                                size: 16
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: textColor,
+                                stepSize: 1
+                            },
+                            grid: {
+                                color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: textColor
+                            },
+                            grid: {
+                                color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function copyResults() {
+            if (!window.currentResults) {
+                alert('まずテキストを解析してください');
+                return;
+            }
+            
+            let text = '【CEFR語句抽出結果】\n\n';
+            text += '単語\tCEFRレベル\t出現回数\n';
+            text += '----------------------------------------\n';
+            
+            window.currentResults.forEach(item => {
+                text += `${item.word}\t${item.level}\t${item.count}\n`;
+            });
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('結果をクリップボードにコピーしました！');
+            }).catch(err => {
+                alert('コピーに失敗しました: ' + err);
             });
         }
 
