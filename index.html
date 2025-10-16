@@ -57,8 +57,9 @@
         .header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 20px;
+            gap: 20px;
         }
 
         h1 {
@@ -72,13 +73,24 @@
         }
 
         .theme-toggle {
-            background: var(--bg-secondary);
-            border: 2px solid var(--border-color);
-            padding: 8px 16px;
-            border-radius: 4px;
+            background: transparent;
+            border: none;
+            padding: 8px;
+            border-radius: 50%;
             cursor: pointer;
             color: var(--text-primary);
-            font-size: 14px;
+            font-size: 24px;
+            transition: all 0.3s;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-tertiary);
+            transform: rotate(180deg);
         }
 
         .main-content {
@@ -241,13 +253,27 @@
 
         .chart-container {
             margin: 20px 0;
-            max-height: 400px;
+            height: 300px;
+            width: 100%;
+            position: relative;
+        }
+
+        .chart-container canvas {
+            max-height: 300px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            display: block;
+            overflow-x: auto;
+        }
+
+        thead, tbody {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
         }
 
         th, td {
@@ -274,6 +300,11 @@
 
         .results {
             margin-top: 20px;
+            clear: both;
+        }
+
+        .results .panel {
+            overflow: visible;
         }
 
         .hidden {
@@ -304,6 +335,65 @@
             .main-content {
                 grid-template-columns: 1fr;
             }
+            
+            .header {
+                flex-direction: row;
+                align-items: flex-start;
+                justify-content: space-between;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .panel {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .subtitle {
+                font-size: 12px;
+            }
+            
+            .header {
+                align-items: flex-start;
+            }
+            
+            .theme-toggle {
+                font-size: 20px;
+                width: 36px;
+                height: 36px;
+            }
+            
+            .level-selector label {
+                display: block;
+                margin: 8px 0;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .chart-container {
+                height: 250px;
+            }
+            
+            table {
+                font-size: 13px;
+            }
+            
+            th, td {
+                padding: 8px 6px;
+            }
         }
     </style>
 </head>
@@ -314,7 +404,7 @@
                 <h1>CEFR語句抽出ツール</h1>
                 <div class="subtitle">CEFRJ Wordlist Ver1.6 準拠（6,863語収録）</div>
             </div>
-            <button class="theme-toggle" onclick="toggleTheme()">🌓 ダークモード切替</button>
+            <button class="theme-toggle" onclick="toggleTheme()" title="ダークモード切替">🌓</button>
         </div>
 
         <div class="status-bar loading" id="statusBar">
@@ -844,7 +934,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: {
                             display: false
