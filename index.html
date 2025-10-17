@@ -158,6 +158,7 @@
             resize: vertical;
             background: var(--bg-secondary);
             color: var(--text-primary);
+            max-height: 600px;
         }
 
         textarea:focus {
@@ -421,17 +422,17 @@
 
         <div class="main-content">
             <div class="panel">
-                <h3>📝 テキスト入力</h3>
+                <h3>テキスト入力</h3>
                 <textarea id="inputText" placeholder="辞書データの読み込み中..." disabled oninput="updatePreview()"></textarea>
                 
                 <div class="button-group">
-                    <button onclick="analyzeText()" id="analyzeBtn" disabled>📊 語句を抽出</button>
-                    <button class="button-secondary" onclick="clearText()">🗑️ クリア</button>
+                    <button onclick="analyzeText()" id="analyzeBtn" disabled>語句を抽出</button>
+                    <button class="button-secondary" onclick="clearText()">クリア</button>
                 </div>
             </div>
 
             <div class="panel">
-                <h3>🎨 ハイライト表示</h3>
+                <h3>ハイライト表示</h3>
                 <div class="legend">
                     <div class="legend-item">
                         <div class="legend-color" style="background: var(--highlight-a1);"></div>
@@ -470,7 +471,7 @@
 
         <div class="results hidden" id="results">
             <div class="panel">
-                <h3>📈 分析結果</h3>
+                <h3>分析結果</h3>
                 
                 <div class="stats" id="stats"></div>
 
@@ -479,8 +480,8 @@
                 </div>
 
                 <div class="button-group">
-                    <button class="button-secondary" onclick="exportToCSV()" id="exportBtn">📥 CSVでダウンロード</button>
-                    <button class="button-secondary" onclick="copyResults()">📋 結果をコピー</button>
+                    <button class="button-secondary" onclick="exportToCSV()" id="exportBtn">CSVでダウンロード</button>
+                    <button class="button-secondary" onclick="copyResults()">結果をコピー</button>
                 </div>
 
                 <table id="resultTable">
@@ -694,30 +695,43 @@
         function updatePreview() {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
-                const text = document.getElementById('inputText').value;
-                if (!text.trim()) {
-                    document.getElementById('highlightedText').innerHTML = 
-                        'テキストを入力すると、選択したレベルの単語がリアルタイムでハイライトされます。<br>単語をクリックすると辞書で意味を確認できます。';
-                    document.getElementById('previewStats').style.display = 'none';
-                    return;
-                }
+                try {
+                    const text = document.getElementById('inputText').value;
+                    if (!text.trim()) {
+                        document.getElementById('highlightedText').innerHTML = 
+                            'テキストを入力すると、選択したレベルの単語がリアルタイムでハイライトされます。<br>単語をクリックすると辞書で意味を確認できます。';
+                        document.getElementById('previewStats').style.display = 'none';
+                        return;
+                    }
 
-                const selectedLevels = getSelectedLevels();
-                if (selectedLevels.length === 0) {
-                    document.getElementById('highlightedText').innerHTML = 
-                        'レベルを少なくとも1つ選択してください。';
-                    document.getElementById('previewStats').style.display = 'none';
-                    return;
-                }
+                    // 長すぎるテキストの警告（10万文字以上）
+                    if (text.length > 100000) {
+                        document.getElementById('highlightedText').innerHTML = 
+                            '<span style="color: #F44336;">⚠️ テキストが長すぎます。10万文字以内にしてください。</span>';
+                        document.getElementById('previewStats').style.display = 'none';
+                        return;
+                    }
 
-                const highlightedHtml = highlightText(text, selectedLevels);
-                document.getElementById('highlightedText').innerHTML = highlightedHtml;
-                
-                // カウント表示
-                const count = (highlightedHtml.match(/class="word-highlight/g) || []).length;
-                document.getElementById('previewCount').innerHTML = 
-                    `該当単語数: <strong>${count}</strong>語`;
-                document.getElementById('previewStats').style.display = 'block';
+                    const selectedLevels = getSelectedLevels();
+                    if (selectedLevels.length === 0) {
+                        document.getElementById('highlightedText').innerHTML = 
+                            'レベルを少なくとも1つ選択してください。';
+                        document.getElementById('previewStats').style.display = 'none';
+                        return;
+                    }
+
+                    const highlightedHtml = highlightText(text, selectedLevels);
+                    document.getElementById('highlightedText').innerHTML = highlightedHtml;
+                    
+                    const count = (highlightedHtml.match(/class="word-highlight/g) || []).length;
+                    document.getElementById('previewCount').innerHTML = 
+                        `該当単語数: <strong>${count}</strong>語`;
+                    document.getElementById('previewStats').style.display = 'block';
+                } catch (error) {
+                    console.error('Preview error:', error);
+                    document.getElementById('highlightedText').innerHTML = 
+                        '<span style="color: #F44336;">エラーが発生しました。テキストを確認してください。</span>';
+                }
             }, 300);
         }
 
@@ -761,15 +775,27 @@
         }
 
         function openDictionary(word) {
-            window.open(`https://ejje.weblio.jp/content/${encodeURIComponent(word)}`, '_blank');
+            try {
+                const cleanWord = word.replace(/[^a-zA-Z]/g, '');
+                if (cleanWord) {
+                    window.open(`https://ejje.weblio.jp/content/${encodeURIComponent(cleanWord)}`, '_blank');
+                }
+            } catch (error) {
+                console.error('Dictionary open error:', error);
+                alert('辞書を開けませんでした。');
+            }
         }
 
         function clearText() {
-            document.getElementById('inputText').value = '';
-            document.getElementById('highlightedText').innerHTML = 
-                'テキストを入力すると、選択したレベルの単語がリアルタイムでハイライトされます。<br>単語をクリックすると辞書で意味を確認できます。';
-            document.getElementById('previewStats').style.display = 'none';
-            document.getElementById('results').classList.add('hidden');
+            try {
+                document.getElementById('inputText').value = '';
+                document.getElementById('highlightedText').innerHTML = 
+                    'テキストを入力すると、選択したレベルの単語がリアルタイムでハイライトされます。<br>単語をクリックすると辞書で意味を確認できます。';
+                document.getElementById('previewStats').style.display = 'none';
+                document.getElementById('results').classList.add('hidden');
+            } catch (error) {
+                console.error('Clear error:', error);
+            }
         }
 
         function analyzeText() {
@@ -777,6 +803,11 @@
             
             if (!inputText) {
                 alert('テキストを入力してください');
+                return;
+            }
+            
+            if (inputText.length > 100000) {
+                alert('テキストが長すぎます。10万文字以内にしてください。');
                 return;
             }
             
@@ -796,7 +827,13 @@
             document.getElementById('results').classList.add('hidden');
             
             setTimeout(() => {
-                processText(inputText, selectedLevels);
+                try {
+                    processText(inputText, selectedLevels);
+                } catch (error) {
+                    console.error('Analysis error:', error);
+                    alert('処理中にエラーが発生しました。テキストを確認してください。');
+                    document.getElementById('loading').style.display = 'none';
+                }
             }, 100);
         }
 
@@ -891,7 +928,7 @@
                 levelCell.innerHTML = `<span class="level-${item.level.toLowerCase()}">${item.level}</span>`;
                 row.insertCell(2).textContent = item.count;
                 const dictCell = row.insertCell(3);
-                dictCell.innerHTML = `<button class="button-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="openDictionary('${item.word}')">🔍 辞書</button>`;
+                dictCell.innerHTML = `<button class="button-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="openDictionary('${item.word}')">辞書</button>`;
             });
         }
 
@@ -973,48 +1010,60 @@
         }
 
         function copyResults() {
-            if (!window.currentResults) {
+            if (!window.currentResults || window.currentResults.length === 0) {
                 alert('まずテキストを解析してください');
                 return;
             }
             
-            let text = '【CEFR語句抽出結果】\n\n';
-            text += '単語\tCEFRレベル\t出現回数\n';
-            text += '----------------------------------------\n';
-            
-            window.currentResults.forEach(item => {
-                text += `${item.word}\t${item.level}\t${item.count}\n`;
-            });
-            
-            navigator.clipboard.writeText(text).then(() => {
-                alert('結果をクリップボードにコピーしました！');
-            }).catch(err => {
-                alert('コピーに失敗しました: ' + err);
-            });
+            try {
+                let text = '【CEFR語句抽出結果】\n\n';
+                text += '単語\tCEFRレベル\t出現回数\n';
+                text += '----------------------------------------\n';
+                
+                window.currentResults.forEach(item => {
+                    text += `${item.word}\t${item.level}\t${item.count}\n`;
+                });
+                
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('結果をクリップボードにコピーしました！');
+                }).catch(err => {
+                    console.error('Copy failed:', err);
+                    alert('コピーに失敗しました。ブラウザの設定を確認してください。');
+                });
+            } catch (error) {
+                console.error('Copy error:', error);
+                alert('コピー機能でエラーが発生しました。');
+            }
         }
 
         function exportToCSV() {
-            if (!window.currentResults) {
+            if (!window.currentResults || window.currentResults.length === 0) {
                 alert('まずテキストを解析してください');
                 return;
             }
             
-            let csv = '\uFEFF';
-            csv += '単語,CEFRレベル,出現回数\n';
-            
-            window.currentResults.forEach(item => {
-                csv += `"${item.word}","${item.level}",${item.count}\n`;
-            });
-            
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', 'cefr_words_' + new Date().getTime() + '.csv');
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            try {
+                let csv = '\uFEFF';
+                csv += '単語,CEFRレベル,出現回数\n';
+                
+                window.currentResults.forEach(item => {
+                    csv += `"${item.word}","${item.level}",${item.count}\n`;
+                });
+                
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'cefr_words_' + new Date().getTime() + '.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Export error:', error);
+                alert('CSVのダウンロードに失敗しました。');
+            }
         }
     </script>
 </body>
