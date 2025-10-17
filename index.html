@@ -901,6 +901,21 @@
                 levelCounts[r.level] = (levelCounts[r.level] || 0) + 1;
             });
             
+            // 平均CEFRレベルを計算
+            const levelValues = { 'A1': 1, 'A2': 2, 'B1': 3, 'B2': 4 };
+            let totalWeight = 0;
+            let totalWords = 0;
+            
+            results.forEach(r => {
+                const value = levelValues[r.level] || 0;
+                totalWeight += value * r.count;
+                totalWords += r.count;
+            });
+            
+            const averageValue = totalWords > 0 ? (totalWeight / totalWords) : 0;
+            const averageLevel = getAverageLevel(averageValue);
+            const averageDescription = getLevelDescription(averageValue);
+            
             let statsHTML = `
                 <div class="stat-item">
                     <div>抽出された単語数：<strong>${totalCount}</strong> 語（延べ ${totalOccurrences} 回出現）</div>
@@ -916,6 +931,18 @@
             
             statsHTML += `</div>`;
             
+            if (totalWords > 0) {
+                statsHTML += `
+                    <div class="stat-item" style="margin-top:15px; padding-top:15px; border-top: 2px solid var(--border-color);">
+                        <div style="font-size:16px;">
+                            📊 このテキストの平均CEFRレベル：
+                            <strong style="font-size:20px; color: ${getLevelColor(averageValue)};">${averageLevel}</strong>
+                            <span style="color: var(--text-secondary); font-size:14px;">(${averageDescription})</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
             document.getElementById('stats').innerHTML = statsHTML;
             
             const tbody = document.getElementById('tableBody');
@@ -930,6 +957,30 @@
                 const dictCell = row.insertCell(3);
                 dictCell.innerHTML = `<button class="button-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="openDictionary('${item.word}')">辞書</button>`;
             });
+        }
+        
+        function getAverageLevel(value) {
+            if (value < 1.5) return 'A1';
+            if (value < 2.5) return 'A2';
+            if (value < 3.5) return 'B1';
+            return 'B2';
+        }
+        
+        function getLevelDescription(value) {
+            if (value < 1.3) return '初級前半';
+            if (value < 1.7) return '初級後半';
+            if (value < 2.3) return '初中級前半';
+            if (value < 2.7) return '初中級後半';
+            if (value < 3.3) return '中級前半';
+            if (value < 3.7) return '中級後半';
+            return '中上級';
+        }
+        
+        function getLevelColor(value) {
+            if (value < 1.5) return '#2196F3';
+            if (value < 2.5) return '#4CAF50';
+            if (value < 3.5) return '#FF9800';
+            return '#F44336';
         }
 
         function createChart(results) {
