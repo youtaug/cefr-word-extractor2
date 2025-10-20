@@ -35,6 +35,16 @@
             --button-hover: #45a049;
         }
 
+        [data-theme="dark"] .manual-link {
+            color: #66BB6A;
+            border-color: #66BB6A;
+        }
+
+        [data-theme="dark"] .manual-link:hover {
+            background: #66BB6A;
+            color: #1a1a1a;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -69,7 +79,38 @@
         .subtitle {
             color: var(--text-secondary);
             font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .manual-link {
+            display: inline-block;
+            color: var(--button-primary);
+            text-decoration: none;
+            font-size: 14px;
+            padding: 6px 12px;
+            border: 1px solid var(--button-primary);
+            border-radius: 4px;
+            transition: all 0.3s;
             margin-bottom: 20px;
+        }
+
+        .manual-link:hover {
+            background: var(--button-primary);
+            color: white;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 40px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .footer-credit {
+            margin-top: 8px;
+            font-size: 12px;
         }
 
         .theme-toggle {
@@ -361,6 +402,13 @@
                 font-size: 12px;
             }
             
+            .manual-link {
+                font-size: 12px;
+                padding: 5px 10px;
+                display: block;
+                text-align: center;
+            }
+            
             .header {
                 align-items: flex-start;
             }
@@ -395,6 +443,15 @@
             th, td {
                 padding: 8px 6px;
             }
+
+            .footer {
+                font-size: 12px;
+                padding: 20px 10px;
+            }
+
+            .footer-credit {
+                font-size: 11px;
+            }
         }
     </style>
 </head>
@@ -404,6 +461,7 @@
             <div>
                 <h1>CEFR語句抽出ツール</h1>
                 <div class="subtitle">CEFRJ Wordlist Ver1.6 準拠（6,863語収録）</div>
+                <a href="https://docs.google.com/document/d/1hBEHo1ZBHBkMwwagasuEH9mL_a_mY1P0uRYSMdPFF0I/edit?usp=sharing" target="_blank" class="manual-link">使用マニュアルはこちら</a>
             </div>
             <button class="theme-toggle" onclick="toggleTheme()" title="ダークモード切替">🌓</button>
         </div>
@@ -496,6 +554,11 @@
                     <tbody id="tableBody"></tbody>
                 </table>
             </div>
+        </div>
+
+        <div class="footer">
+            <div>CEFR語句抽出ツール - CEFRJ Wordlist Ver1.6準拠</div>
+            <div class="footer-credit">Created by Yuta Seki</div>
         </div>
     </div>
 
@@ -643,7 +706,7 @@
                 .catch(error => {
                     statusBar.className = 'status-bar error';
                     statusBar.innerHTML = 
-                        `エラー：CSVファイルを読み込めませんでした。「cefrj-wordlist.csv」がHTMLファイルと同じフォルダにあることを確認してください。`;
+                        `エラー：CSVファイルを読み込めませんでした。マニュアルを見てトラブルシューティングしてください。それでも解決しない場合は、担当者にご連絡ください。`;
                 });
         }
 
